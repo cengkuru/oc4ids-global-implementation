@@ -1,0 +1,1 @@
+{"ast":null,"code":"/**\n * @license\n * SPDX-License-Identifier: Apache-2.0\n */\nimport { unwrapResourceUrl } from '../../internals/resource_url_impl.js';\n/**\n * Sets the Src attribute from the given SafeUrl.\n */\nexport function setSrc(embedEl, url) {\n  embedEl.src = unwrapResourceUrl(url);\n}","map":null,"metadata":{},"sourceType":"module","externalDependencies":[]}

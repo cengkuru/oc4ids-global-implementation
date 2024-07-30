@@ -1,1 +1,114 @@
-/* You can add global styles to this file, and also import other style files */
+/* styles.scss */
+
+/* Import Tailwind directives */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Global styles */
+body {
+  @apply font-inter text-accent bg-primary antialiased;
+}
+
+/* Heading styles */
+h1, h2, h3, h4, h5, h6 {
+  @apply font-inter font-bold mb-4;
+}
+
+h1 { @apply text-4xl; }
+h2 { @apply text-3xl; }
+h3 { @apply text-2xl; }
+h4 { @apply text-xl; }
+h5 { @apply text-lg; }
+h6 { @apply text-base; }
+
+/* Link styles */
+a {
+  @apply text-secondary hover:text-accent4 transition-colors duration-300;
+}
+
+/* Button styles */
+.btn {
+  @apply apple-button focus:outline-none focus:ring-2 focus:ring-accent6 focus:ring-opacity-50;
+}
+
+/* Form styles */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+  @apply w-full px-4 py-2 border border-accent2 rounded-apple focus:outline-none focus:ring-2 focus:ring-accent6 focus:border-transparent;
+}
+
+/* Card styles */
+.card {
+  @apply apple-card;
+}
+
+/* Utility classes */
+.container {
+  @apply mx-auto px-4;
+}
+
+.flex-center {
+  @apply flex items-center justify-center;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Transitions */
+.transition-default {
+  @apply transition-all duration-300 ease-apple;
+}
+
+/* Animations */
+.animate-fade-in {
+  @apply animate-apple-fade-in;
+}
+
+.animate-scale {
+  @apply animate-apple-scale;
+}
+
+/* Accessibility */
+.sr-only {
+  @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+}
+
+/* Dark mode styles */
+.dark {
+  @apply bg-background-dark text-text-dark;
+
+  .card {
+    @apply bg-accent text-text-dark;
+  }
+
+  a {
+    @apply text-accent6 hover:text-accent5;
+  }
+}
+
+/* Responsive utilities */
+@screen md {
+  .container {
+    @apply px-6;
+  }
+}
+
+@screen lg {
+  .container {
+    @apply px-8;
+  }
+}
+
+/* Print styles */
+@media print {
+  body {
+    @apply text-black bg-white;
+  }
+}

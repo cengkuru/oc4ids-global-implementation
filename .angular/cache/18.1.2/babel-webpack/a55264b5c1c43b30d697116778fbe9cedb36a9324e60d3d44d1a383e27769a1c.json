@@ -1,0 +1,1 @@
+{"ast":null,"code":"/**\n * @license\n * SPDX-License-Identifier: Apache-2.0\n */\nimport { unwrapResourceUrl } from '../../internals/resource_url_impl.js';\n/** Sets the data attribute using a TrustedResourceUrl */\nexport function setData(obj, v) {\n  obj.data = unwrapResourceUrl(v);\n}","map":null,"metadata":{},"sourceType":"module","externalDependencies":[]}

@@ -1,0 +1,1 @@
+{"ast":null,"code":"/**\n * @license\n * SPDX-License-Identifier: Apache-2.0\n */\nimport { unwrapHtml } from '../../internals/html_impl.js';\n/** Safely creates a contextualFragment. */\nexport function createContextualFragment(range, html) {\n  return range.createContextualFragment(unwrapHtml(html));\n}","map":null,"metadata":{},"sourceType":"module","externalDependencies":[]}
