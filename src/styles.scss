@@ -112,3 +112,46 @@ textarea {
     @apply text-black bg-white;
   }
 }
+
+
+
+/*------------------------------------------------*/
+:host {
+  display: block;
+  height: 100vh;
+}
+.pulsing-icon {
+  .pulse-ring {
+    width: 30px;
+    height: 30px;
+    border: 3px solid;
+    border-radius: 50%;
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    animation: pulse 2s infinite;
+  }
+
+  .pulse-core {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    position: absolute;
+    top: 3px;
+    left: 3px;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}

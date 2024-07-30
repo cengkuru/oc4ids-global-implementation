@@ -1,14 +1,25 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import * as L from 'leaflet';
-import {Story} from './models/story.model';
-import {FormBuilder, FormGroup} from '@angular/forms';
-
+import { Story } from './models/story.model';
+import { FormBuilder, FormGroup } from '@angular/forms';
+import { trigger, state, style, animate, transition } from '@angular/animations';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
+  animations: [
+    trigger('slideInOut', [
+      transition(':enter', [
+        style({ transform: 'translateY(100%)' }),
+        animate('300ms ease-out', style({ transform: 'translateY(0%)' }))
+      ]),
+      transition(':leave', [
+        animate('300ms ease-in', style({ transform: 'translateY(100%)' }))
+      ])
+    ])
+  ]
 })
 export class AppComponent implements OnInit {
   title = 'globalSuccess';
@@ -20,32 +31,58 @@ export class AppComponent implements OnInit {
   filterForm: FormGroup;
   regions: string[] = [];
   statuses: string[] = [];
+  statusColors: { [key: string]: string } = {
+    'Active': '#61a8bd',
+    'Inactive': '#D60000',
+    'In Development': '#ffce32',
+    'Other': '#58707b'
+  };
+  statusColorsArray: { name: string; color: string }[] = [];
 
   constructor(private http: HttpClient, private fb: FormBuilder) {
     this.filterForm = this.fb.group({
       region: [''],
       status: ['']
     });
+    this.initStatusColorsArray();
   }
 
-  ngOnInit(): void {
-    this.initMap();
-    this.loadStories();
+  initStatusColorsArray(): void {
+    this.statusColorsArray = Object.entries(this.statusColors).map(([name, color]) => ({ name, color }));
   }
 
-  initMap(): void {
-    this.map = L.map('map').setView([0, 0], 2);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(this.map);
+  async ngOnInit(): Promise<void> {
+    await this.initMap();
+    await this.loadStories();
   }
 
-  loadStories(): void {
-    this.http.get<{ features: Story[] }>('assets/data/stories.json').subscribe(data => {
-      this.stories = data.features;
-      this.filteredStories = this.stories;
-      this.addMarkers();
-      this.extractFilters();
+  initMap(): Promise<void> {
+    return new Promise((resolve) => {
+      this.map = L.map('map').setView([0, 0], 2);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(this.map);
+      console.log('Map initialized');
+      resolve();
+    });
+  }
+
+  loadStories(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.http.get<{ features: Story[] }>('assets/data/stories.json').subscribe({
+        next: (data) => {
+          console.log('Data loaded:', data);
+          this.stories = data.features;
+          this.filteredStories = this.stories;
+          this.extractFilters();
+          this.addMarkers();
+          resolve();
+        },
+        error: (error) => {
+          console.error('Error loading stories:', error);
+          reject(error);
+        }
+      });
     });
   }
 
@@ -55,50 +92,61 @@ export class AppComponent implements OnInit {
   }
 
   addMarkers(): void {
+    if (!this.map) {
+      console.error('Map not initialized when trying to add markers');
+      return;
+    }
+
     this.map.eachLayer(layer => {
       if (layer instanceof L.Marker) {
         this.map.removeLayer(layer);
       }
     });
 
-    this.filteredStories.forEach(story => {
-      const marker = L.marker([story.geometry.coordinates[1], story.geometry.coordinates[0]])
-        .addTo(this.map)
-        .bindPopup(this.createPopupContent(story));
+    console.log('Adding markers for', this.filteredStories.length, 'stories');
 
-      marker.on('click', () => {
-        this.selectedStory = story;
-      });
+    this.filteredStories.forEach((story, index) => {
+      if (!story.geometry || !Array.isArray(story.geometry.coordinates) || story.geometry.coordinates.length < 2) {
+        console.error('Invalid story geometry:', story);
+        return;
+      }
 
-      const icon = this.getMarkerIcon(story.properties.status);
-      marker.setIcon(icon);
+      const [lng, lat] = story.geometry.coordinates;
+      console.log(`Adding marker ${index + 1}:`, lat, lng, story.properties.country);
+
+      try {
+        const marker = L.marker([lat, lng], {
+          icon: this.getPulsingIcon(story.properties.status)
+        })
+          .addTo(this.map)
+          .bindPopup(this.createPopupContent(story));
+
+        marker.on('click', () => {
+          this.selectedStory = story;
+        });
+      } catch (error) {
+        console.error('Error adding marker:', error);
+      }
+    });
+
+    console.log('Finished adding markers');
+  }
+
+  getPulsingIcon(status: string): L.DivIcon {
+    const color = this.getColorForStatus(status);
+    return L.divIcon({
+      className: 'pulsing-icon',
+      html: `
+        <div class="pulse-ring" style="border-color: ${color};"></div>
+        <div class="pulse-core" style="background-color: ${color};"></div>
+      `,
+      iconSize: [20, 20],
+      iconAnchor: [10, 10]
     });
   }
 
-  getMarkerIcon(status: string): L.Icon {
-    let color: string;
-    switch (status) {
-      case 'Active':
-        color = 'green';
-        break;
-      case 'Inactive':
-        color = 'red';
-        break;
-      case 'In Development':
-        color = 'orange';
-        break;
-      default:
-        color = 'blue';
-    }
-
-    return L.icon({
-      iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
-      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-      shadowSize: [41, 41]
-    });
+  getColorForStatus(status: string): string {
+    return this.statusColors[status] || this.statusColors['Other'];
   }
 
   createPopupContent(story: Story): string {
@@ -121,7 +169,9 @@ export class AppComponent implements OnInit {
 
   toggleListView(): void {
     this.showListView = !this.showListView;
+    console.log('List view toggled:', this.showListView);
   }
+
 
   selectStory(story: Story): void {
     this.selectedStory = story;
