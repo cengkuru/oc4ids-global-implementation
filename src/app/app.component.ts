@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import * as L from 'leaflet';
 import {Story} from './models/story.model';
+import {FormBuilder, FormGroup} from '@angular/forms';
 
 
 @Component({
@@ -13,10 +14,19 @@ export class AppComponent implements OnInit {
   title = 'globalSuccess';
   map!: L.Map;
   stories: Story[] = [];
+  filteredStories: Story[] = [];
   showListView = false;
   selectedStory: Story | null = null;
+  filterForm: FormGroup;
+  regions: string[] = [];
+  statuses: string[] = [];
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private fb: FormBuilder) {
+    this.filterForm = this.fb.group({
+      region: [''],
+      status: ['']
+    });
+  }
 
   ngOnInit(): void {
     this.initMap();
@@ -33,14 +43,25 @@ export class AppComponent implements OnInit {
   loadStories(): void {
     this.http.get<{ features: Story[] }>('assets/data/stories.json').subscribe(data => {
       this.stories = data.features;
+      this.filteredStories = this.stories;
       this.addMarkers();
+      this.extractFilters();
     });
   }
 
-
+  extractFilters(): void {
+    this.regions = [...new Set(this.stories.map(story => story.properties.region))];
+    this.statuses = [...new Set(this.stories.map(story => story.properties.status))];
+  }
 
   addMarkers(): void {
-    this.stories.forEach(story => {
+    this.map.eachLayer(layer => {
+      if (layer instanceof L.Marker) {
+        this.map.removeLayer(layer);
+      }
+    });
+
+    this.filteredStories.forEach(story => {
       const marker = L.marker([story.geometry.coordinates[1], story.geometry.coordinates[0]])
         .addTo(this.map)
         .bindPopup(this.createPopupContent(story));
@@ -53,7 +74,6 @@ export class AppComponent implements OnInit {
       marker.setIcon(icon);
     });
   }
-
 
   getMarkerIcon(status: string): L.Icon {
     let color: string;
@@ -107,5 +127,14 @@ export class AppComponent implements OnInit {
     this.selectedStory = story;
     const [lng, lat] = story.geometry.coordinates;
     this.map.setView([lat, lng], 6);
+  }
+
+  applyFilters(): void {
+    const { region, status } = this.filterForm.value;
+    this.filteredStories = this.stories.filter(story =>
+      (!region || story.properties.region === region) &&
+      (!status || story.properties.status === status)
+    );
+    this.addMarkers();
   }
 }
