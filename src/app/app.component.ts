@@ -13,6 +13,8 @@ export class AppComponent implements OnInit {
   title = 'globalSuccess';
   map!: L.Map;
   stories: Story[] = [];
+  showListView = false;
+  selectedStory: Story | null = null;
 
   constructor(private http: HttpClient) {}
 
@@ -35,13 +37,18 @@ export class AppComponent implements OnInit {
     });
   }
 
+
+
   addMarkers(): void {
     this.stories.forEach(story => {
       const marker = L.marker([story.geometry.coordinates[1], story.geometry.coordinates[0]])
         .addTo(this.map)
         .bindPopup(this.createPopupContent(story));
 
-      // Color markers based on status
+      marker.on('click', () => {
+        this.selectedStory = story;
+      });
+
       const icon = this.getMarkerIcon(story.properties.status);
       marker.setIcon(icon);
     });
@@ -90,5 +97,15 @@ export class AppComponent implements OnInit {
         ` : ''}
       </div>
     `;
+  }
+
+  toggleListView(): void {
+    this.showListView = !this.showListView;
+  }
+
+  selectStory(story: Story): void {
+    this.selectedStory = story;
+    const [lng, lat] = story.geometry.coordinates;
+    this.map.setView([lat, lng], 6);
   }
 }
