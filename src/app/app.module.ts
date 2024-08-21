@@ -11,10 +11,11 @@ import {AngularFireModule} from '@angular/fire/compat';
 import {AngularFirestoreModule} from '@angular/fire/compat/firestore';
 import {AngularFireAuthModule} from '@angular/fire/compat/auth';
 import {environment} from '../environments/environment';
+import {InfoModalComponent} from './info-modal/info-modal.component';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
   ],
   imports: [
     BrowserModule,
@@ -25,6 +26,7 @@ import {environment} from '../environments/environment';
       preventDuplicates: true
     }),
     AppRoutingModule,
+    InfoModalComponent,
     HttpClientModule,
     ReactiveFormsModule,
     AngularFireModule.initializeApp(environment.firebase),

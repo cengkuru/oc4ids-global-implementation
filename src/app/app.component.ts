@@ -45,6 +45,8 @@ export class AppComponent implements OnInit {
   showMetrics: boolean = false;
   showChallenges: boolean = false;
 
+  showModal = true;
+
 
 
   constructor(private http: HttpClient) {
@@ -246,5 +248,13 @@ export class AppComponent implements OnInit {
     this.showChallenges = !this.showChallenges;
     this.showMetrics = false;
   }
+
+
+
+
+  closeModal() {
+    this.showModal = false;
+  }
+
 
 }

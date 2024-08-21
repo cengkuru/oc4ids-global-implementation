@@ -1,0 +1,35 @@
+<div class="fixed inset-0 bg-accent3 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full z-[9999]"
+     [@fadeIn]="'in'"
+     (click)="close()">
+  <div class="relative top-20 mx-auto p-6 border border-accent2 w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 rounded-2xl bg-primary shadow-apple-xl"
+       [@slideDown]="'in'"
+       (click)="$event.stopPropagation()">
+    <div class="mt-3">
+      <h3 class="text-2xl leading-8 font-semibold text-accent mb-4 text-center">Global OC4IDS Implementation Tracker</h3>
+      <div class="mt-4 px-4 py-3">
+        <p class="text-base text-accent4 mb-6">
+          The Global OC4IDS Implementation Tracker serves as a comprehensive, interactive platform for monitoring and analyzing the worldwide adoption and impact of the Open Contracting for Infrastructure Data Standard (OC4IDS). Its core objectives are:
+        </p>
+        <ul class="space-y-4" [@fadeInList]="'in'">
+          <li *ngFor="let objective of objectives; let i = index"
+              class="flex items-start p-3 rounded-lg transition-all duration-300 hover:bg-accent2 hover:bg-opacity-20">
+            <i class="bi {{ objective.icon }} text-2xl mr-4 mt-1" [ngClass]="objective.color"></i>
+            <div>
+              <strong class="block text-lg text-accent mb-1">{{ objective.title }}</strong>
+              <span class="text-accent4">{{ objective.description }}</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="mt-8 px-4">
+      <button
+        id="ok-btn"
+        class="px-6 py-3 bg-accent6 text-primary text-lg font-medium rounded-full w-full shadow-apple-md hover:bg-accent5 focus:outline-none focus:ring-2 focus:ring-accent5 focus:ring-offset-2 focus:ring-offset-primary transition-all duration-300 transform hover:scale-105"
+        (click)="close()"
+      >
+        Got it!
+      </button>
+    </div>
+  </div>
+</div>
