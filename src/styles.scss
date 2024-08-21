@@ -1,51 +1,53 @@
-/* styles.scss */
-
-/* Import Tailwind directives */
+/* Tailwind CSS imports */
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-/* Import Inter font */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Custom color variables */
+:root {
+  --color-primary: #f7f7f7;
+  --color-secondary: #d60000;
+  --color-accent: #333333;
+  --color-accent1: #ffce32;
+  --color-accent2: #d8d8cd;
+  --color-accent3: #2c4143;
+  --color-accent4: #58707b;
+  --color-accent5: #9bcbd9;
+  --color-accent6: #61a8bd;
+}
 
 /* Global styles */
 body {
-  @apply font-inter text-accent bg-primary antialiased;
+  @apply font-sans text-accent bg-primary;
 }
 
-/* Heading styles */
 h1, h2, h3, h4, h5, h6 {
-  @apply font-inter font-bold mb-4;
+  @apply font-display font-bold;
 }
 
-h1 { @apply text-4xl; }
-h2 { @apply text-3xl; }
-h3 { @apply text-2xl; }
-h4 { @apply text-xl; }
-h5 { @apply text-lg; }
-h6 { @apply text-base; }
-
-/* Link styles */
 a {
-  @apply text-secondary hover:text-accent4 transition-colors duration-300;
+  @apply text-accent6 hover:text-accent5 transition-colors duration-300;
 }
 
-/* Button styles */
-.btn {
-  @apply apple-button focus:outline-none focus:ring-2 focus:ring-accent6 focus:ring-opacity-50;
+/* Typography */
+.h1 {
+  @apply text-4xl md:text-5xl font-bold tracking-tight;
 }
 
-/* Form styles */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-textarea {
-  @apply w-full px-4 py-2 border border-accent2 rounded-apple focus:outline-none focus:ring-2 focus:ring-accent6 focus:border-transparent;
+.h2 {
+  @apply text-3xl md:text-4xl font-semibold tracking-tight;
 }
 
-/* Card styles */
-.card {
-  @apply apple-card;
+.h3 {
+  @apply text-2xl md:text-3xl font-semibold;
+}
+
+.body-large {
+  @apply text-lg leading-relaxed;
+}
+
+.body-small {
+  @apply text-sm leading-relaxed;
 }
 
 /* Utility classes */
@@ -61,9 +63,41 @@ textarea {
   text-wrap: balance;
 }
 
+.apple-glass {
+  @apply bg-white bg-opacity-70 backdrop-filter backdrop-blur-lg;
+  .dark & {
+    @apply bg-accent3 bg-opacity-70;
+  }
+}
+
+.apple-hover-lift {
+  @apply transition-transform duration-300 ease-out;
+  &:hover {
+    @apply transform -translate-y-1;
+  }
+}
+
+.apple-press-effect {
+  @apply transition-transform duration-100 ease-in-out active:scale-95;
+}
+
+.apple-focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-accent6 focus:ring-opacity-50;
+}
+
 /* Transitions */
 .transition-default {
-  @apply transition-all duration-300 ease-apple;
+  @apply transition-all duration-300 ease-apple-ease-in-out;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  @apply transition-opacity duration-300 ease-out;
+}
+
+.fade-enter,
+.fade-leave-to {
+  @apply opacity-0;
 }
 
 /* Animations */
@@ -75,6 +109,35 @@ textarea {
   @apply animate-apple-scale;
 }
 
+/* Buttons */
+
+.btn-secondary {
+  @apply bg-accent4 text-primary hover:bg-accent3 apple-press-effect apple-focus-ring;
+}
+
+.btn-accent {
+  @apply bg-accent1 text-accent hover:bg-accent2 apple-press-effect apple-focus-ring;
+}
+
+/* Cards */
+.card {
+  @apply bg-white rounded-apple-lg shadow-apple-md p-6 apple-hover-lift;
+  .dark & {
+    @apply bg-accent3 text-primary;
+  }
+}
+
+/* Form elements */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+  @apply w-full px-4 py-2 rounded-apple-sm border border-accent2 focus:border-accent6 apple-focus-ring;
+  .dark & {
+    @apply bg-accent4 border-accent5 text-primary;
+  }
+}
+
 /* Accessibility */
 .sr-only {
   @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
@@ -82,18 +145,31 @@ textarea {
 
 /* Dark mode styles */
 .dark {
-  @apply bg-background-dark text-text-dark;
-
-  .card {
-    @apply bg-accent text-text-dark;
-  }
+  @apply bg-accent3 text-primary;
 
   a {
-    @apply text-accent6 hover:text-accent5;
+    @apply text-accent5 hover:text-accent6;
+  }
+
+  .card {
+    @apply bg-accent4 text-primary;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea {
+    @apply bg-accent3 border-accent5 text-primary;
   }
 }
 
 /* Responsive utilities */
+@screen sm {
+  .container {
+    @apply px-4;
+  }
+}
+
 @screen md {
   .container {
     @apply px-6;
@@ -113,34 +189,23 @@ textarea {
   }
 }
 
-
-
-/*------------------------------------------------*/
+/* Component-specific styles */
 :host {
   display: block;
   height: 100vh;
 }
+
 .pulsing-icon {
   .pulse-ring {
-    width: 30px;
-    height: 30px;
-    border: 3px solid;
-    border-radius: 50%;
-    position: absolute;
-    top: -5px;
-    left: -5px;
+    @apply w-[30px] h-[30px] border-2 rounded-full absolute top-[-5px] left-[-5px];
     animation: pulse 2s infinite;
   }
 
   .pulse-core {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    position: absolute;
-    top: 3px;
-    left: 3px;
+    @apply w-[14px] h-[14px] rounded-full absolute top-[3px] left-[3px];
   }
 }
+
 
 @keyframes pulse {
   0% {
@@ -155,6 +220,32 @@ textarea {
     opacity: 0;
   }
 }
+
+.leaflet-container {
+  @apply font-sans;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  @apply bg-primary bg-opacity-90 shadow-apple-md;
+}
+
+.btn {
+  @apply px-4 py-2 rounded-apple-md transition-all duration-300 ease-out text-primary font-semibold;
+}
+
+.btn-primary {
+  @apply bg-accent6 hover:bg-accent5;
+}
+
+.progress-bar {
+  @apply w-full bg-gray-200 rounded-full h-2.5 mb-1;
+  .progress {
+    @apply h-2.5 rounded-full;
+  }
+}
+
+/* Leaflet map styles */
 .leaflet-pane {
   z-index: 1;
 }
@@ -164,16 +255,8 @@ textarea {
   z-index: 10 !important;
 }
 
-.leaflet-popup-content-wrapper {
-  background-color: rgba(255, 255, 255, 0.9);
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
 
 .leaflet-popup-tip {
-  background-color: rgba(255, 255, 255, 0.9);
+  @apply bg-white bg-opacity-90;
 }
 
-.leaflet-container {
-  font-family: 'Inter', sans-serif;
-}

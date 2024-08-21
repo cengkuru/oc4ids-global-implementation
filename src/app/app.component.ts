@@ -40,7 +40,11 @@ export class AppComponent implements OnInit {
   commonChallenges: string[] = [];
   implementationProgress: { [key: string]: number } = {};
 
-  lastUpdated: Date = new Date('2024-08-21'); // Replace with your desired date; // Add this line to create a new Date object
+  lastUpdated: Date = new Date('2024-08-21');
+
+  showMetrics: boolean = false;
+  showChallenges: boolean = false;
+
 
 
   constructor(private http: HttpClient) {
@@ -231,4 +235,16 @@ export class AppComponent implements OnInit {
   closeSelectedStory(): void {
     this.selectedStory = null;
   }
+
+
+  toggleMetrics(): void {
+    this.showMetrics = !this.showMetrics;
+    this.showChallenges = false;
+  }
+
+  toggleChallenges(): void {
+    this.showChallenges = !this.showChallenges;
+    this.showMetrics = false;
+  }
+
 }
