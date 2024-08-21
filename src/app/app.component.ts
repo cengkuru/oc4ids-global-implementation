@@ -3,6 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import * as L from 'leaflet';
 import {CoSTDataset, Story} from './models/story.model';
 import { trigger, state, style, animate, transition } from '@angular/animations';
+import {AngularFirestore} from '@angular/fire/compat/firestore';
+
+interface VisitCount {
+  count: number;
+}
 
 @Component({
   selector: 'app-root',
@@ -47,9 +52,14 @@ export class AppComponent implements OnInit {
 
   showModal = true;
 
+  totalVisits: number = 0;
 
 
-  constructor(private http: HttpClient) {
+
+  constructor(
+    private http: HttpClient,
+    private firestore: AngularFirestore
+  ) {
     this.initStatusColorsArray();
   }
 
@@ -61,7 +71,52 @@ export class AppComponent implements OnInit {
     await this.initMap();
     await this.loadStories();
     this.calculateImplementationMetrics();
+    this.trackVisit();
+    this.fetchTotalVisits();
   }
+
+  private fetchTotalVisits(): void {
+    this.firestore.collection('visits').get().subscribe(snapshot => {
+      this.totalVisits = snapshot.docs.reduce((total, doc) => {
+        const data = doc.data() as VisitCount;
+        return total + (data.count || 0);
+      }, 0);
+    }, error => {
+      console.error('Error fetching total visits:', error);
+    });
+  }
+
+  private trackVisit(): void {
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+      console.log('Localhost visit - not tracking');
+      return;
+    }
+
+    if (sessionStorage.getItem('visitCounted')) {
+      console.log('Visit already counted in this session');
+      return;
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const visitsRef = this.firestore.collection('visits').doc<VisitCount>(today);
+
+    this.firestore.firestore.runTransaction(async (transaction) => {
+      const doc = await transaction.get(visitsRef.ref);
+      if (!doc.exists) {
+        transaction.set(visitsRef.ref, { count: 1 });
+      } else {
+        const data = doc.data() as VisitCount;
+        const newCount = (data.count || 0) + 1;
+        transaction.update(visitsRef.ref, { count: newCount });
+      }
+    }).then(() => {
+      console.log('Visit counted successfully');
+      sessionStorage.setItem('visitCounted', 'true');
+    }).catch((error) => {
+      console.error('Error counting visit:', error);
+    });
+  }
+
 
   initMap(): Promise<void> {
     return new Promise((resolve) => {
