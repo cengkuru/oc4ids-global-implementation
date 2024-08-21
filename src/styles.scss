@@ -155,3 +155,25 @@ textarea {
     opacity: 0;
   }
 }
+.leaflet-pane {
+  z-index: 1;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 10 !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.leaflet-popup-tip {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.leaflet-container {
+  font-family: 'Inter', sans-serif;
+}

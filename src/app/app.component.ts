@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import * as L from 'leaflet';
-import { Story } from './models/story.model';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import {CoSTDataset, Story} from './models/story.model';
 import { trigger, state, style, animate, transition } from '@angular/animations';
 
 @Component({
@@ -26,11 +25,7 @@ export class AppComponent implements OnInit {
   map!: L.Map;
   stories: Story[] = [];
   filteredStories: Story[] = [];
-  showListView = false;
   selectedStory: Story | null = null;
-  filterForm: FormGroup;
-  regions: string[] = [];
-  statuses: string[] = [];
   statusColors: { [key: string]: string } = {
     'Active': '#61a8bd',
     'Inactive': '#D60000',
@@ -38,12 +33,17 @@ export class AppComponent implements OnInit {
     'Other': '#58707b'
   };
   statusColorsArray: { name: string; color: string }[] = [];
+  activeFilters: string[] = [];
 
-  constructor(private http: HttpClient, private fb: FormBuilder) {
-    this.filterForm = this.fb.group({
-      region: [''],
-      status: ['']
-    });
+  coSTDataset: CoSTDataset | null = null;
+  implementationPercentage: number = 0;
+  commonChallenges: string[] = [];
+  implementationProgress: { [key: string]: number } = {};
+
+  lastUpdated: Date = new Date('2024-08-21'); // Replace with your desired date; // Add this line to create a new Date object
+
+
+  constructor(private http: HttpClient) {
     this.initStatusColorsArray();
   }
 
@@ -54,6 +54,7 @@ export class AppComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     await this.initMap();
     await this.loadStories();
+    this.calculateImplementationMetrics();
   }
 
   initMap(): Promise<void> {
@@ -69,13 +70,14 @@ export class AppComponent implements OnInit {
 
   loadStories(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.http.get<{ features: Story[] }>('assets/data/stories.json').subscribe({
+      this.http.get<CoSTDataset>('assets/data/stories.json').subscribe({
         next: (data) => {
           console.log('Data loaded:', data);
+          this.coSTDataset = data;
           this.stories = data.features;
           this.filteredStories = this.stories;
-          this.extractFilters();
           this.addMarkers();
+          this.calculateImplementationMetrics(); // Move this call here
           resolve();
         },
         error: (error) => {
@@ -86,9 +88,36 @@ export class AppComponent implements OnInit {
     });
   }
 
-  extractFilters(): void {
-    this.regions = [...new Set(this.stories.map(story => story.properties.region))];
-    this.statuses = [...new Set(this.stories.map(story => story.properties.status))];
+  calculateImplementationMetrics(): void {
+    if (!this.stories || this.stories.length === 0) {
+      console.error('Stories data is not available');
+      return;
+    }
+
+    const totalCountries = this.stories.length;
+    const fullyImplemented = this.stories.filter(story =>
+      story.properties.status === 'Active' && story.properties.projectsDisclosed > 0
+    ).length;
+
+    this.implementationPercentage = (fullyImplemented / totalCountries) * 100;
+
+    // Calculate implementation progress
+    const statusCounts = this.stories.reduce((acc, story) => {
+      acc[story.properties.status] = (acc[story.properties.status] || 0) + 1;
+      return acc;
+    }, {} as { [key: string]: number });
+
+    Object.keys(statusCounts).forEach(status => {
+      this.implementationProgress[status] = (statusCounts[status] / totalCountries) * 100;
+    });
+
+    // Identify common challenges (this is a placeholder - you'd need real data for this)
+    this.commonChallenges = [
+      'Data standardization across different systems',
+      'Ensuring data quality and completeness',
+      'Building capacity for data disclosure',
+      'Overcoming technical barriers in implementation'
+    ];
   }
 
   addMarkers(): void {
@@ -151,27 +180,47 @@ export class AppComponent implements OnInit {
 
   createPopupContent(story: Story): string {
     return `
-      <div class="font-sans">
-        <h3 class="font-bold text-lg">${story.properties.country}</h3>
-        <p class="text-sm"><strong>Region:</strong> ${story.properties.region}</p>
-        <p class="text-sm"><strong>Status:</strong> ${story.properties.status}</p>
-        <p class="text-sm"><strong>Projects Disclosed:</strong> ${story.properties.projectsDisclosed}</p>
-        <p class="text-sm"><strong>Disclosure Mandate:</strong> ${story.properties.disclosureMandate || 'N/A'}</p>
-        ${story.properties.achievements.length > 0 ? `
-          <p class="text-sm mt-2"><strong>Achievements:</strong></p>
-          <ul class="list-disc list-inside text-xs">
-            ${story.properties.achievements.map(achievement => `<li>${achievement}</li>`).join('')}
-          </ul>
-        ` : ''}
-      </div>
-    `;
+    <div class="font-sans p-2">
+      <h3 class="font-bold text-lg text-secondary mb-2">${story.properties.country}</h3>
+      <p class="text-sm mb-1"><i class="bi bi-globe2 mr-1 text-accent4"></i> <strong>Region:</strong> ${story.properties.region}</p>
+      <p class="text-sm mb-1"><i class="bi bi-circle-fill mr-1 text-xs" style="color: ${this.getColorForStatus(story.properties.status)}"></i> <strong>Status:</strong> ${story.properties.status}</p>
+      <p class="text-sm mb-1"><i class="bi bi-bar-chart-fill mr-1 text-accent5"></i> <strong>Projects Disclosed:</strong> ${story.properties.projectsDisclosed}</p>
+      <p class="text-sm mb-1"><i class="bi bi-file-earmark-text mr-1 text-accent6"></i> <strong>Disclosure Mandate:</strong> ${story.properties.disclosureMandate || 'N/A'}</p>
+      ${story.properties.achievements.length > 0 ? `
+        <p class="text-sm mt-2 font-bold"><i class="bi bi-trophy-fill mr-1 text-accent5"></i> Achievements:</p>
+        <ul class="list-disc list-inside text-xs">
+          ${story.properties.achievements.map(achievement => `<li>${achievement}</li>`).join('')}
+        </ul>
+      ` : ''}
+    </div>
+  `;
   }
 
-  toggleListView(): void {
-    this.showListView = !this.showListView;
-    console.log('List view toggled:', this.showListView);
+  toggleFilter(status: string): void {
+    const index = this.activeFilters.indexOf(status);
+    if (index > -1) {
+      this.activeFilters.splice(index, 1);
+    } else {
+      this.activeFilters.push(status);
+    }
+    this.applyFilters();
   }
 
+  clearFilters(): void {
+    this.activeFilters = [];
+    this.applyFilters();
+  }
+
+  applyFilters(): void {
+    if (this.activeFilters.length === 0) {
+      this.filteredStories = this.stories;
+    } else {
+      this.filteredStories = this.stories.filter(story =>
+        this.activeFilters.includes(story.properties.status)
+      );
+    }
+    this.addMarkers();
+  }
 
   selectStory(story: Story): void {
     this.selectedStory = story;
@@ -179,12 +228,7 @@ export class AppComponent implements OnInit {
     this.map.setView([lat, lng], 6);
   }
 
-  applyFilters(): void {
-    const { region, status } = this.filterForm.value;
-    this.filteredStories = this.stories.filter(story =>
-      (!region || story.properties.region === region) &&
-      (!status || story.properties.status === status)
-    );
-    this.addMarkers();
+  closeSelectedStory(): void {
+    this.selectedStory = null;
   }
 }
